@@ -11,6 +11,8 @@ export class DataSampleItemEntity{
     })
     date:Date;
     @Column()
+    name:string;
+    @Column()
     angle_id: number;
     @Column({
         type:"enum",

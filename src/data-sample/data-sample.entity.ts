@@ -9,7 +9,7 @@ export class DataSampleEntity{
     @PrimaryGeneratedColumn('uuid')
     id:string
     @Column()
-    nameData:string
+    name_data:string
     @OneToMany(()=>DataSampleItemEntity, dataSampleItem=>dataSampleItem.dataSample, {
         cascade: true,
     })

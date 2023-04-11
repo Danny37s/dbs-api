@@ -1,13 +1,18 @@
 import { DataSampleItemDto } from './../data-sample-item/data-sample-item.dto';
-import { DataSampleDto } from './data-sample.dto';
+import { DataSampleDto, getDataSampleFilterDto } from './data-sample.dto';
 import { DataSampleItemEntity } from 'src/data-sample-item/data-sample-Item.entity';
 import { DataSampleEntity } from './data-sample.entity';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { plainToInstance } from 'class-transformer';
+import { FindOneOptions, Like, Repository } from 'typeorm';
+import { plainToClass, plainToInstance } from 'class-transformer';
 import * as fs from 'fs';
-import dataSample from "../../data/data.json"
+import dataSample from '../../data/data.json';
+import * as v4 from 'uuidv4';
 @Injectable()
 export class DataSampleService {
   private data: any;
@@ -17,35 +22,106 @@ export class DataSampleService {
     @InjectRepository(DataSampleItemEntity)
     private readonly dataSampleItemRepository: Repository<DataSampleItemEntity>,
   ) {
-    for (const [qnh, data] of Object.entries(dataSample)) {
-      for (const [id, item] of Object.entries(data)) {
-        // const newData = new Data();
-        // newData.qnh = qnh;
-        // newData.date = new Date(item.date);
-        // newData.angle_id = item.angle_id;
-        // newData.status = item.status;
-        // newData.predict_result = item.predict_result;
-    
-        // await repository.save(newData);
-        console.log(`${id}`)
-      }
-    }
+    this.data = dataSample;
   }
-  async create(
-    dataSampleDto: DataSampleDto,
-    dataSampleItemDto: DataSampleItemDto[],
-  ): Promise<DataSampleDto> {
-    
-    // const dataSampleItems = await Promise.all(dataSampleItemDto.map(async (itemDto) => {
-    //   const item = this.dataSampleItemRepository.create(itemDto);
-    //   return item;
-    // })) 
-    // const dataSample = this.dataSampleRepository.create(dataSampleDto);
+  async create(): Promise<DataSampleDto> {
+    for (const [qnh, data] of Object.entries(dataSample)) {
+      let dataSample = this.dataSampleRepository.create();
+      let dataSampleItems: DataSampleItemEntity[] = [];
+      for (const [id, item] of Object.entries<DataSampleItemDto>(data)) {
+        let date = item.date;
+        let angle_id = item.angle_id;
+        let status = item.status;
+        let predict_result = item.predict_result;
+        const valueRepo = this.dataSampleItemRepository.create({
+          date,
+          angle_id,
+          status,
+          predict_result,
+          name: id,
+        });
+        dataSampleItems.push(valueRepo);
+      }
+      dataSample.name_data = qnh;
+      dataSample.dataSampleItemsDto = dataSampleItems;
+      await this.dataSampleRepository.save(dataSample);
+    }
     // dataSample.dataSampleItemsDto = dataSampleItems
     // this.dataSampleRepository.save(dataSample)
 
-    return plainToInstance(DataSampleDto, {}, {
-      excludeExtraneousValues: true,
+    return plainToInstance(
+      DataSampleDto,
+      {},
+      {
+        excludeExtraneousValues: true,
+      },
+    );
+  }
+  async getListData(): Promise<DataSampleDto[]> {
+    const items = await this.dataSampleRepository.find();
+    return items;
+  }
+  async getListDataByFilter(
+    filterDto: getDataSampleFilterDto,
+  ): Promise<DataSampleDto[]> {
+    const { search, sort } = filterDto;
+    const dataAfterFilter = await this.dataSampleRepository.find({
+      where: {
+        name_data: Like(`%${search}%`),
+      },
+      order:{
+        name_data:sort as 'ASC' | 'DESC'
+      }
     });
+     return dataAfterFilter.map((item) => plainToClass(DataSampleDto, item));
+  }
+  async getAllItemsByDataSample(resId: string): Promise<DataSampleItemDto[]> {
+    const isValidUuid = v4.isUuid(resId);
+
+    if (!isValidUuid) {
+      throw new BadRequestException(`Invalid UUID: ${resId}`);
+    }
+    const options: FindOneOptions<DataSampleEntity> = {
+      relations: ['dataSampleItems'],
+    };
+    const dataSample = await this.dataSampleRepository.findOne({
+      where: {
+        id: resId,
+      },
+      relations: ['dataSampleItemsDto'],
+    });
+
+    if (!dataSample) {
+      throw new NotFoundException(`Data sample with id ${resId} not found`);
+    }
+
+    return dataSample.dataSampleItemsDto.map((item) =>
+      plainToClass(DataSampleItemDto, item),
+    );
+  }
+  async getItemsByFilter(filterDto: getDataSampleFilterDto, resId: string): Promise<DataSampleItemDto[]> {
+    const isValidUuid = v4.isUuid(resId);
+
+    if (!isValidUuid) {
+      throw new BadRequestException(`Invalid UUID: ${resId}`);
+    }
+    const options: FindOneOptions<DataSampleEntity> = {
+      relations: ['dataSampleItems'],
+    };
+    const dataSample = await this.dataSampleRepository.findOne({
+      where: {
+        id: resId,
+      },
+      relations: ['dataSampleItemsDto'],
+    });
+
+    if (!dataSample) {
+      throw new NotFoundException(`Data sample with id ${resId} not found`);
+    }
+
+
+    return dataSample.dataSampleItemsDto.map((item) =>
+      plainToClass(DataSampleItemDto, item),
+    );
   }
 }

@@ -13,7 +13,7 @@ import { DataSampleItemModule } from './data-sample-item/data-sample-item.module
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
-      port: 5432,
+      port: 8432,
       username: 'postgres',
       password: 'postgres',
       database: 'postgres',
