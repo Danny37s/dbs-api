@@ -78,3 +78,6 @@ run docker
 
 use postman call this api:
 - localhost:3000/data-sample/data
+
+run :
+npm start
