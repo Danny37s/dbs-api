@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import { DataSampleItemDto } from './../data-sample-item/data-sample-item.dto';
 import { DataSampleDto, getDataSampleFilterDto } from './data-sample.dto';
 import { DataSampleItemEntity } from 'src/data-sample-item/data-sample-Item.entity';
@@ -13,6 +14,7 @@ import { plainToClass, plainToInstance } from 'class-transformer';
 import * as fs from 'fs';
 import dataSample from '../../data/data.json';
 import * as v4 from 'uuidv4';
+import { format } from 'date-fns';
 @Injectable()
 export class DataSampleService {
   private data: any;
@@ -26,14 +28,14 @@ export class DataSampleService {
   }
   async create(): Promise<DataSampleDto> {
     for (const [qnh, data] of Object.entries(dataSample)) {
-      let dataSample = this.dataSampleRepository.create();
+      let newDataSample = this.dataSampleRepository.create();
       let dataSampleItems: DataSampleItemEntity[] = [];
       for (const [id, item] of Object.entries<DataSampleItemDto>(data)) {
-        let date = item.date;
+        let date = new Date(item.date);
         let angle_id = item.angle_id;
         let status = item.status;
         let predict_result = item.predict_result;
-        const valueRepo = this.dataSampleItemRepository.create({
+        let valueRepo = this.dataSampleItemRepository.create({
           date,
           angle_id,
           status,
@@ -42,12 +44,10 @@ export class DataSampleService {
         });
         dataSampleItems.push(valueRepo);
       }
-      dataSample.name_data = qnh;
-      dataSample.dataSampleItemsDto = dataSampleItems;
-      await this.dataSampleRepository.save(dataSample);
+      newDataSample.name_data = qnh;
+      newDataSample.dataSampleItemsDto = dataSampleItems;
+      await this.dataSampleRepository.save(newDataSample);
     }
-    // dataSample.dataSampleItemsDto = dataSampleItems
-    // this.dataSampleRepository.save(dataSample)
 
     return plainToInstance(
       DataSampleDto,
@@ -69,11 +69,11 @@ export class DataSampleService {
       where: {
         name_data: Like(`%${search}%`),
       },
-      order:{
-        name_data:sort as 'ASC' | 'DESC'
-      }
+      order: {
+        name_data: sort as 'ASC' | 'DESC',
+      },
     });
-     return dataAfterFilter.map((item) => plainToClass(DataSampleDto, item));
+    return dataAfterFilter.map((item) => plainToClass(DataSampleDto, item));
   }
   async getAllItemsByDataSample(resId: string): Promise<DataSampleItemDto[]> {
     const isValidUuid = v4.isUuid(resId);
@@ -99,7 +99,10 @@ export class DataSampleService {
       plainToClass(DataSampleItemDto, item),
     );
   }
-  async getItemsByFilter(filterDto: getDataSampleFilterDto, resId: string): Promise<DataSampleItemDto[]> {
+  async getItemsByFilter(
+    filterDto: getDataSampleFilterDto,
+    resId: string,
+  ): Promise<DataSampleItemDto[]> {
     const isValidUuid = v4.isUuid(resId);
 
     if (!isValidUuid) {
@@ -118,7 +121,6 @@ export class DataSampleService {
     if (!dataSample) {
       throw new NotFoundException(`Data sample with id ${resId} not found`);
     }
-
 
     return dataSample.dataSampleItemsDto.map((item) =>
       plainToClass(DataSampleItemDto, item),

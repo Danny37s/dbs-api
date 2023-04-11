@@ -5,7 +5,7 @@
             "server": "localhost",
             "port": 8432,
             "driver": "PostgreSQL",
-            "name": "dbs-db",
+            "name": "dbs_db",
             "database": "postgres",
             "username": "postgres"
         }

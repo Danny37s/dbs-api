@@ -3,9 +3,9 @@ import { Expose, Type } from 'class-transformer';
 import { IsNotEmpty, ValidateNested, isNotEmpty } from 'class-validator';
 import { Column } from 'typeorm';
 
-export enum ESort{
-  'asc'='ASC',
-  'desc'='DESC',
+export enum ESort {
+  'asc' = 'ASC',
+  'desc' = 'DESC',
 }
 export class DataSampleDto {
   @Expose()
@@ -17,14 +17,13 @@ export class DataSampleDto {
   @Type(() => DataSampleItemDto)
   dataSampleItemsDto: DataSampleItemDto[];
 }
-
-export class getDataSampleFilterDto{
+export class getDataSampleFilterDto {
   @Expose()
-  search:string;
+  search: string;
   @Expose()
   @Column({
-    type:"enum",
-    enum:ESort
-})
-  sort
+    type: 'enum',
+    enum: ESort,
+  })
+  sort;
 }
