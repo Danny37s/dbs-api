@@ -7,6 +7,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Like, Repository } from 'typeorm';
@@ -14,17 +15,21 @@ import { plainToClass, plainToInstance } from 'class-transformer';
 import * as fs from 'fs';
 import dataSample from '../../data/data.json';
 import * as v4 from 'uuidv4';
-import { format } from 'date-fns';
 @Injectable()
-export class DataSampleService {
+export class DataSampleService implements OnModuleInit{
   private data: any;
   constructor(
     @InjectRepository(DataSampleEntity)
     private readonly dataSampleRepository: Repository<DataSampleEntity>,
     @InjectRepository(DataSampleItemEntity)
     private readonly dataSampleItemRepository: Repository<DataSampleItemEntity>,
+    
   ) {
     this.data = dataSample;
+  }
+  onModuleInit(){
+    this.create()
+    console.log("initialized")
   }
   async create(): Promise<DataSampleDto> {
     for (const [qnh, data] of Object.entries(dataSample)) {

@@ -6,7 +6,7 @@
             "port": 8432,
             "driver": "PostgreSQL",
             "name": "dbs_db",
-            "database": "postgres",
+            "database": "dbs-db",
             "username": "postgres"
         }
     ]

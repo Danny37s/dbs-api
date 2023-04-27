@@ -74,10 +74,8 @@ Nest is [MIT licensed](LICENSE).
 
 
 run docker
-- docker-compose up -d ( nhớ cài docker)
-
+- npm run build:db
 use postman call this api:
 - localhost:3000/data-sample/data
 
-run :
-npm start
+- npm start
