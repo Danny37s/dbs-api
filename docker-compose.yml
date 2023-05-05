@@ -18,6 +18,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       DB_NAME: dbs-db
+      DB_PORT: 5432
     depends_on:
       - db
 

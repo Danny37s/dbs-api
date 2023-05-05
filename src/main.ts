@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 // import session, * as sessions from 'express-session';
 // import  passport from 'passport';
 import cookieParser from "cookie-parser"
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import passport from 'passport';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
 declare const module: any;

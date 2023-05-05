@@ -1,3 +1,4 @@
+import { PaginationDto } from '@/paginate/paginate.dto';
 import { DataSampleItemDto } from './../data-sample-item/data-sample-item.dto';
 import { Expose, Type } from 'class-transformer';
 import {

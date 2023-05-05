@@ -15,6 +15,7 @@ import { DataSampleService } from './data-sample.service';
 import * as v4 from 'uuidv4';
 import { JwtAuthGuard } from '@/auth/guards/jwt.guard';
 import { plainToClass } from 'class-transformer';
+import { PaginationDto } from '@/paginate/paginate.dto';
 @Controller('data-sample')
 export class DataSampleController {
   constructor(private readonly dataSampleService: DataSampleService) {}
@@ -25,18 +26,27 @@ export class DataSampleController {
   @UseGuards(JwtAuthGuard)
   @Get('/data')
   async getListData(
-    @Query() filterDto,
+    @Query() Q_filterDto,
+    @Query() Q_paginateDto,
   ): Promise<DataSampleDto[]> {
     try {
-      const dto = plainToClass(getDataSampleFilterDto, filterDto, {
+      const filterDto = plainToClass(getDataSampleFilterDto, Q_filterDto, {
         excludeExtraneousValues: true,
       });
-      console.log(dto);
-      console.log(filterDto);
-      if (filterDto && Object.keys(filterDto).length > 0) {
-        return await this.dataSampleService.getListDataByFilter(filterDto);
+      const paginateDto = plainToClass(PaginationDto, Q_paginateDto, {
+        excludeExtraneousValues: true,
+      });
+      if (paginateDto.page < 1) {
+        throw new BadRequestException('Invalid page number');
       } else {
-        return await this.dataSampleService.getListData();
+        if (filterDto && Object.keys(filterDto).length > 0) {
+          return await this.dataSampleService.getListDataByFilter(
+            filterDto,
+            paginateDto,
+          );
+        } else {
+          return await this.dataSampleService.getListData(paginateDto);
+        }
       }
     } catch (error) {
       console.error(error);

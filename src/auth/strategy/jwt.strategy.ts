@@ -14,20 +14,20 @@ export class JwtStrategy extends PassportStrategy(Strategy,'jwt') {
   constructor(private config: ConfigService, @InjectRepository(UsersEntity) private readonly userRepository: Repository<UsersEntity>) {
      super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        JwtStrategy.extractJWT,
+        // JwtStrategy.extractJWT,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       secretOrKey: config.get("JWT_SECRET"),
     });
   }
 
-  private static extractJWT(req: Request): string | null {
-    console.log(req.headers)
-    if (req.headers && 'token' in req.headers) {
-      return req.cookies.token;
-    }
-    return null;
-  }
+  // private static extractJWT(req: Request): string | null {
+  //   console.log(req.headers)
+  //   if (req.headers && 'token' in req.headers) {
+  //     return req.cookies.token;
+  //   }
+  //   return null;
+  // }
 
   async validate(payload: { id: string; username: string }) {
     const checkUser = this.userRepository.findOne({

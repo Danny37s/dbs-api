@@ -17,34 +17,34 @@ import { Request, Response } from 'express';
 @Injectable()
 export class AuthService {
   constructor(
-    private jwt : JwtService,
+    private jwt: JwtService,
     @InjectRepository(UsersEntity)
     private readonly usersRepository: Repository<UsersEntity>,
-    private config : ConfigService
+    private config: ConfigService,
   ) {}
   async signup(dto: UsersDto) {
     const hashedPassword = await this.hashPassword(dto.password);
-  let newUser = this.usersRepository.create({
-    password: hashedPassword,
-    firstName: dto.firstName,
-    fullName: dto.fullName,
-    lastName: dto.lastName,
-    username: dto.username,
-  });
+    let newUser = this.usersRepository.create({
+      password: hashedPassword,
+      firstName: dto.firstName,
+      fullName: dto.fullName,
+      lastName: dto.lastName,
+      username: dto.username,
+    });
 
-  try {
-    await this.usersRepository.save(newUser);
-    const { password, ...resUserData } = newUser;
-    return {
-      status: true,
-      message: 'Sign up successful',
-      data: resUserData,
-    };
-  } catch (err) {
-    throw new BadRequestException('Email Already exists!');
+    try {
+      await this.usersRepository.save(newUser);
+      const { password, ...resUserData } = newUser;
+      return {
+        status: true,
+        message: 'Sign up successful',
+        data: resUserData,
+      };
+    } catch (err) {
+      throw new BadRequestException('Email Already exists!');
+    }
   }
-  }
-  async signin(dto: AuthDto, req: Request, res: Response){
+  async signin(dto: AuthDto, req: Request, res: Response) {
     const { username, password } = dto;
     const user = await this.usersRepository.findOne({
       where: {
@@ -62,17 +62,17 @@ export class AuthService {
         'Your account and/or password is incorrect, please try again',
       );
     }
-    const token = await this.signToken(user.user_id, user.username)
-    if(!token){
-      throw new ForbiddenException()
+    const token = await this.signToken(user.user_id, user.username);
+    if (!token) {
+      throw new ForbiddenException();
     }
-    res.cookie('token', token,{httpOnly:true, secure:true})
-    delete user.password
-    return res.send({status:true,...user, token:token});
+    res.cookie('token', token, { httpOnly: true, secure: true });
+    delete user.password;
+    return res.send({ status: true, ...user, token: token });
   }
 
   async signout(req: Request, res: Response) {
-    res.clearCookie('token')
+    res.clearCookie('token');
     // Do something to invalidate the access token
     return { message: 'Signed out successfully' };
   }
@@ -82,6 +82,9 @@ export class AuthService {
     return hashedPassword;
   }
   async signToken(user_id: string, username: string) {
-    return this.jwt.signAsync({user_id: user_id, username: username},{secret:this.config.get('JWT_SECRET'), expiresIn:"1day"});
+    return this.jwt.signAsync(
+      { user_id: user_id, username: username },
+      { secret: this.config.get('JWT_SECRET'), expiresIn: '1day' },
+    );
   }
 }
