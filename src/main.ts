@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 // import session, * as sessions from 'express-session';
 // import  passport from 'passport';
-import cookieParser from "cookie-parser"
+import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import passport from 'passport';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
@@ -16,8 +16,8 @@ async function bootstrap() {
     module.hot.dispose(() => app.close());
   }
   app.enableCors();
-  app.use(passport.initialize()); 
-  app.use(cookieParser())
+  app.use(passport.initialize());
+  app.use(cookieParser());
   await app.listen(3000);
 }
 bootstrap();

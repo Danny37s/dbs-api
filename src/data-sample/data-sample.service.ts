@@ -1,6 +1,11 @@
 /* eslint-disable prefer-const */
 import { DataSampleItemDto } from './../data-sample-item/data-sample-item.dto';
-import { DataSampleDto, ESort, getDataSampleFilterDto } from './data-sample.dto';
+import {
+  DataSampleDto,
+  DataSampleResDto,
+  ESort,
+  getDataSampleFilterDto,
+} from './data-sample.dto';
 import { DataSampleItemEntity } from 'src/data-sample-item/data-sample-Item.entity';
 import { DataSampleEntity } from './data-sample.entity';
 import {
@@ -17,19 +22,27 @@ import dataSample from '../../data/data.json';
 import * as v4 from 'uuidv4';
 import { PaginationDto } from '@/paginate/paginate.dto';
 @Injectable()
-export class DataSampleService implements OnModuleInit{
+export class DataSampleService implements OnModuleInit {
   private data: any;
   constructor(
     @InjectRepository(DataSampleEntity)
     private readonly dataSampleRepository: Repository<DataSampleEntity>,
     @InjectRepository(DataSampleItemEntity)
     private readonly dataSampleItemRepository: Repository<DataSampleItemEntity>,
-    
   ) {
     this.data = dataSample;
   }
-  onModuleInit(){
-    this.create()
+  async onModuleInit() {
+    const hasData = await this.checkDataExistence();
+    if (!hasData) {
+      // create initial data
+      this.create();
+    }
+  }
+  // check database has data
+  async checkDataExistence(): Promise<boolean> {
+    const count = await this.dataSampleRepository.count();
+    return count > 0;
   }
   async create(): Promise<DataSampleDto> {
     for (const [qnh, data] of Object.entries(dataSample)) {
@@ -62,7 +75,7 @@ export class DataSampleService implements OnModuleInit{
       },
     );
   }
-  async getListData(paginate:PaginationDto): Promise<DataSampleDto[]> {
+  async getListData(paginate: PaginationDto): Promise<DataSampleResDto> {
     const { page = 1, limit = 10 } = paginate;
 
     const [data, count] = await this.dataSampleRepository.findAndCount({
@@ -70,17 +83,26 @@ export class DataSampleService implements OnModuleInit{
       take: limit,
     });
 
-    return data;
+    return {
+      data: data,
+      meta: {
+        total: count,
+        page: page,
+        last_page: Math.ceil(count / limit),
+      },
+    };
   }
   async getListDataByFilter(
     filterDto: getDataSampleFilterDto,
-    paginateDto: PaginationDto
-  ): Promise<DataSampleDto[]> {
+    paginateDto: PaginationDto,
+  ): Promise<DataSampleResDto> {
     const { search, sort } = filterDto;
     const { page = 1, limit = 10 } = paginateDto;
     const query = this.dataSampleRepository.createQueryBuilder('data_sample');
-     if (search) {
-      query.andWhere('data_sample.name_data LIKE :name_data', { name_data: `%${search}%` });
+    if (search) {
+      query.andWhere('data_sample.name_data LIKE :name_data', {
+        name_data: `%${search}%`,
+      });
     }
     // const dataAfterFilter = await this.dataSampleRepository.find({
     //   where: {
@@ -95,7 +117,14 @@ export class DataSampleService implements OnModuleInit{
       .take(limit)
       .orderBy('data_sample.name_data', ESort[sort])
       .getManyAndCount();
-    return data.map((item) => plainToClass(DataSampleDto, item));
+    return {
+      data: data,
+      meta: {
+        total: count,
+        page: page,
+        last_page: Math.ceil(count / limit),
+      },
+    };
   }
   async getAllItemsByDataSample(resId: string): Promise<DataSampleItemDto[]> {
     const isValidUuid = v4.isUuid(resId);

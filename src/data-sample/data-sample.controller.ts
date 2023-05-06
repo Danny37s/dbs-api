@@ -1,5 +1,9 @@
 import { DataSampleItemDto } from './../data-sample-item/data-sample-item.dto';
-import { DataSampleDto, getDataSampleFilterDto } from './data-sample.dto';
+import {
+  DataSampleDto,
+  DataSampleResDto,
+  getDataSampleFilterDto,
+} from './data-sample.dto';
 import {
   BadRequestException,
   Body,
@@ -28,14 +32,12 @@ export class DataSampleController {
   async getListData(
     @Query() Q_filterDto,
     @Query() Q_paginateDto,
-  ): Promise<DataSampleDto[]> {
+  ): Promise<DataSampleResDto> {
     try {
       const filterDto = plainToClass(getDataSampleFilterDto, Q_filterDto, {
         excludeExtraneousValues: true,
       });
-      const paginateDto = plainToClass(PaginationDto, Q_paginateDto, {
-        excludeExtraneousValues: true,
-      });
+      const paginateDto = plainToClass(PaginationDto, Q_paginateDto);
       if (paginateDto.page < 1) {
         throw new BadRequestException('Invalid page number');
       } else {

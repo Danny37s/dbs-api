@@ -33,3 +33,12 @@ export class getDataSampleFilterDto {
   })
   sort;
 }
+
+export class DataSampleResDto {
+  data?: DataSampleDto[];
+  meta?: {
+    total: number;
+    page: number;
+    last_page: number;
+  };
+}
