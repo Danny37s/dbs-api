@@ -1,6 +1,7 @@
 /* eslint-disable prefer-const */
 import { DataSampleItemDto } from './../data-sample-item/data-sample-item.dto';
 import {
+  DataSampleAnalysisDto,
   DataSampleDto,
   DataSampleResDto,
   ESort,
@@ -20,7 +21,8 @@ import { plainToClass, plainToInstance } from 'class-transformer';
 import * as fs from 'fs';
 import dataSample from '../../data/data.json';
 import * as v4 from 'uuidv4';
-import { PaginationDto } from '@/paginate/paginate.dto';
+import { PaginationDto } from '@/data-sample/paginate/paginate.dto';
+import { DateRangeDto } from './dateRange/date-range.dto';
 @Injectable()
 export class DataSampleService implements OnModuleInit {
   private data: any;
@@ -75,7 +77,10 @@ export class DataSampleService implements OnModuleInit {
       },
     );
   }
-  async getListData(paginate: PaginationDto): Promise<DataSampleResDto> {
+  async getListData(
+    paginate: PaginationDto,
+    dateRangeDto: DateRangeDto,
+  ): Promise<DataSampleResDto> {
     const { page = 1, limit = 10 } = paginate;
 
     const [data, count] = await this.dataSampleRepository.findAndCount({
@@ -95,16 +100,24 @@ export class DataSampleService implements OnModuleInit {
   async getListDataByFilter(
     filterDto: getDataSampleFilterDto,
     paginateDto: PaginationDto,
+    dateRangeDto: DateRangeDto,
   ): Promise<DataSampleResDto> {
     const { search, sort } = filterDto;
     const { page = 1, limit = 10 } = paginateDto;
+    const { dateStart, dateEnd } = dateRangeDto;
     const query = this.dataSampleRepository.createQueryBuilder('data_sample');
+    if (dateStart && dateEnd) {
+      query
+        .leftJoin('data_sample.dataSampleItemsDto', 'item')
+        .select('item.date')
+        console.log(await query)
+    }
     if (search) {
       query.andWhere('data_sample.name_data LIKE :name_data', {
         name_data: `%${search}%`,
       });
     }
-   
+
     const [data, count] = await query
       .skip((page - 1) * limit)
       .take(limit)
@@ -169,5 +182,22 @@ export class DataSampleService implements OnModuleInit {
     return dataSample.dataSampleItemsDto.map((item) =>
       plainToClass(DataSampleItemDto, item),
     );
+  }
+
+  async getDataSampleAnalysis(): Promise<DataSampleAnalysisDto> {
+    try {
+      const query = this.dataSampleRepository.createQueryBuilder('data_sample');
+      const [data, count] = await query
+        .andWhere('data_sample.name_data LIKE :name_data', {
+          name_data: `%/HO`,
+        })
+        .getManyAndCount();
+      return {
+        name: '/HO',
+        value: count,
+      };
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
   }
 }
