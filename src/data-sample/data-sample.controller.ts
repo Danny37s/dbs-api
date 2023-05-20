@@ -35,13 +35,13 @@ export class DataSampleController {
     @Query() Q_filterDto,
     @Query() Q_paginateDto,
     @Query() Q_dateRangeDto,
-  ): Promise<DataSampleResDto> {
+  ): Promise<any> {
     try {
       const filterDto = plainToClass(getDataSampleFilterDto, Q_filterDto, {
         excludeExtraneousValues: true,
       });
       const paginateDto = plainToClass(PaginationDto, Q_paginateDto);
-      const dateRangeDto = plainToClass(DateRangeDto, Q_dateRangeDto)
+      const dateRangeDto = plainToClass(DateRangeDto, Q_dateRangeDto);
       if (paginateDto.page < 1) {
         throw new BadRequestException('Invalid page number');
       } else {

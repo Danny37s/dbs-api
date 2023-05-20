@@ -16,7 +16,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, Like, Repository } from 'typeorm';
+import { FindOneOptions, Like, QueryFailedError, Repository } from 'typeorm';
 import { plainToClass, plainToInstance } from 'class-transformer';
 import * as fs from 'fs';
 import dataSample from '../../data/data.json';
@@ -82,35 +82,51 @@ export class DataSampleService implements OnModuleInit {
     dateRangeDto: DateRangeDto,
   ): Promise<DataSampleResDto> {
     const { page = 1, limit = 10 } = paginate;
+    const { dateStart, dateEnd } = dateRangeDto;
 
-    const [data, count] = await this.dataSampleRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    return {
-      data: data,
-      meta: {
-        total: count,
-        page: page,
-        last_page: Math.ceil(count / limit),
-      },
-    };
+    const query = this.dataSampleRepository.createQueryBuilder('data_sample');
+    console.log(dateStart, dateEnd);
+    if (dateStart && dateEnd) {
+      query;
+      // .leftJoinAndSelect('data_sample.dataSampleItemsDto', 'item').where('item.date >= :startDate AND item.date <= :endDate', { startDate: dateStart, endDate: dateEnd })
+    }
+    try {
+      const [data, count] = await query
+        .skip((page - 1) * limit)
+        .take(limit)
+        .orderBy('data_sample.name_data', ESort['asc'])
+        .getManyAndCount();
+      return {
+        data: data,
+        meta: {
+          total: count,
+          page: page,
+          last_page: Math.ceil(count / limit),
+        },
+      };
+      // Process the query result
+    } catch (error) {
+      // Handle the error
+      throw new QueryFailedError(query.getSql(), [], error);
+    }
   }
   async getListDataByFilter(
     filterDto: getDataSampleFilterDto,
     paginateDto: PaginationDto,
     dateRangeDto: DateRangeDto,
-  ): Promise<DataSampleResDto> {
+  ): Promise<any> {
     const { search, sort } = filterDto;
     const { page = 1, limit = 10 } = paginateDto;
     const { dateStart, dateEnd } = dateRangeDto;
     const query = this.dataSampleRepository.createQueryBuilder('data_sample');
     if (dateStart && dateEnd) {
+      console.log(typeof dateStart, dateEnd);
       query
-        .leftJoin('data_sample.dataSampleItemsDto', 'item')
-        .select('item.date')
-        console.log(await query)
+        .leftJoinAndSelect('data_sample.dataSampleItemsDto', 'item')
+        .where('item.date BETWEEN :dateStart AND :dateEnd', {
+          dateStart,
+          dateEnd,
+        });
     }
     if (search) {
       query.andWhere('data_sample.name_data LIKE :name_data', {
@@ -118,19 +134,25 @@ export class DataSampleService implements OnModuleInit {
       });
     }
 
-    const [data, count] = await query
-      .skip((page - 1) * limit)
-      .take(limit)
-      .orderBy('data_sample.name_data', ESort[sort])
-      .getManyAndCount();
-    return {
-      data: data,
-      meta: {
-        total: count,
-        page: page,
-        last_page: Math.ceil(count / limit),
-      },
-    };
+    try {
+      const [data, count] = await query
+        .skip((page - 1) * limit)
+        .take(limit)
+        .orderBy('data_sample.name_data', ESort[sort])
+        .getManyAndCount();
+      return {
+        data: data,
+        meta: {
+          total: count,
+          page: page,
+          last_page: Math.ceil(count / limit),
+        },
+      };
+      // Process the query result
+    } catch (error) {
+      // Handle the error
+      throw new QueryFailedError(query.getSql(), [], error);
+    }
   }
   async getAllItemsByDataSample(resId: string): Promise<DataSampleItemDto[]> {
     const isValidUuid = v4.isUuid(resId);
