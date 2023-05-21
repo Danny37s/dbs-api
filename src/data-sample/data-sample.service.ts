@@ -85,8 +85,7 @@ export class DataSampleService implements OnModuleInit {
     const { dateStart, dateEnd } = dateRangeDto;
 
     const query = this.dataSampleRepository.createQueryBuilder('data_sample');
-    console.log(dateStart, dateEnd);
-    if (dateStart && dateEnd) {
+     if (dateStart && dateEnd) {
       query;
       // .leftJoinAndSelect('data_sample.dataSampleItemsDto', 'item').where('item.date >= :startDate AND item.date <= :endDate', { startDate: dateStart, endDate: dateEnd })
     }
@@ -120,7 +119,6 @@ export class DataSampleService implements OnModuleInit {
     const { dateStart, dateEnd } = dateRangeDto;
     const query = this.dataSampleRepository.createQueryBuilder('data_sample');
     if (dateStart && dateEnd) {
-      console.log(typeof dateStart, dateEnd);
       query
         .leftJoinAndSelect('data_sample.dataSampleItemsDto', 'item')
         .where('item.date BETWEEN :dateStart AND :dateEnd', {
