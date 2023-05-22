@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import * as express from 'express';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 // import session, * as sessions from 'express-session';
@@ -18,6 +19,7 @@ async function bootstrap() {
     module.hot.accept();
     module.hot.dispose(() => app.close());
   }
+  app.use('/.well-known', express.static('public'));
   const configService = app.get(ConfigService);
   app.use(passport.initialize());
   app.use(cookieParser());
