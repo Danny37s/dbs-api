@@ -14,12 +14,12 @@ declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   if (module.hot) {
     module.hot.accept();
     module.hot.dispose(() => app.close());
   }
-  app.use('/.well-known', express.static('public'));
   const configService = app.get(ConfigService);
   app.use(passport.initialize());
   app.use(cookieParser());
